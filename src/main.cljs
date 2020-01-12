@@ -11,9 +11,29 @@
   (case event
     :inc (swap! counter #(+ % payload))
     :dec (swap! counter #(- % payload))
+    :login (prn payload)
     )
   (recur (<! event-queue))
   )
+
+(defn input-box [type label var]
+  [:div.input-box
+   [:label label]
+   [:input {:on-change #(reset! var (-> % .-target .-value))
+            :type type}]]
+  
+  )
+(defn login-box []
+  (let [username (r/atom "")
+        password (r/atom "")
+        ]
+    [:div
+     [input-box "text" "Username: " username]
+     [input-box "password" "Password: " password]
+     [:button.btn-blue.hover:bg-teal-400
+      {:on-click #(put! event-queue [:login [@username @password]])} "press-me"]]
+    ))
+
 
 (defn main-component []
   [:div 
@@ -23,15 +43,16 @@
                                          "bg-green-400"
                                          "bg-red-400")
                                 :on-click #(put! event-queue [:inc 1])} @counter]
-   
-   (into [:ol.p-4] (for [item (range @counter)] [:li item]))
+
+   ;;(into [:ol.p-4] (for [item (range @counter)] [:li item]))
+   [login-box]
    ]
   )
 
 
 (defn mount [c]
-(r/render-component [c] (.getElementById js/document "app"))
-)
+  (r/render-component [c] (.getElementById js/document "app"))
+  )
 
 (defn reload! []
 (mount main-component)
